@@ -19,8 +19,8 @@ El proyecto cuenta con un esquema de licenciamiento dual (Académico AGPLv3 / Co
 
 ### 1. Clonar el repositorio y acceder a la carpeta
 ```bash
-git clone <url-del-repositorio>
-cd motor_operativo_de_simulacion/saturn-network
+git clone [<url-del-repositorio>](https://github.com/SaturnInvestments/Motor_Operativo_de_Simulacion)
+cd motor_operativo_de_simulacion
 ```
 
 ### 2. Crear y activar el entorno virtual (Python >= 3.8)
