@@ -11,6 +11,7 @@
 .env.local
 .env.*.local
 uso_interno.txt
+Inteligencia_Artificial_Explicable_para_la_Optimizacion_de_la_Gestion_de_Tesoreria_y_Riesgos_Financieros.pdf
 
 # 2. Entornos Virtuales y Dependencias
 venv/
