@@ -14,9 +14,11 @@ def _ensure_dir(path):
     """Verifica que el directorio exista, si no, lo crea."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-def apply_watermark(plt_ref=None):
+def apply_watermark(plt_ref=None, metadata=None):
     """
-    Aplica la marca de agua configurada en el entorno al gráfico activo.
+    Aplica la marca de agua configurada en el gráfico activo.
+    Si se proporciona `metadata` (proveniente del archivo .saturn), se utilizan
+    los valores sellados en el artefacto binario.
     """
     from saturn.config import (
         HIDE_BRANDING, WATERMARK_TEXT, WATERMARK_FONT_SIZE,
@@ -26,21 +28,36 @@ def apply_watermark(plt_ref=None):
         return
         
     p_ref = plt_ref if plt_ref is not None else plt
-    text = WATERMARK_TEXT
+
+    if metadata and isinstance(metadata, dict):
+        text = metadata.get('watermark_text', metadata.get('cliente', WATERMARK_TEXT))
+        font_size = int(metadata.get('watermark_font_size', WATERMARK_FONT_SIZE))
+        color = metadata.get('watermark_color', WATERMARK_COLOR)
+        alpha = float(metadata.get('watermark_alpha', WATERMARK_ALPHA))
+        pos_x = float(metadata.get('watermark_pos_x', WATERMARK_POSITION_X))
+        pos_y = float(metadata.get('watermark_pos_y', WATERMARK_POSITION_Y))
+    else:
+        text = WATERMARK_TEXT
+        font_size = WATERMARK_FONT_SIZE
+        color = WATERMARK_COLOR
+        alpha = WATERMARK_ALPHA
+        pos_x = WATERMARK_POSITION_X
+        pos_y = WATERMARK_POSITION_Y
+
     # Auto-agregar fecha si es una firma de marca genérica
     if "{date}" in text:
         text = text.replace("{date}", datetime.datetime.now().strftime("%Y-%m-%d"))
-    elif "©" in text or "Investigación" in text or "Saturn" in text:
+    elif "©" in text or "Investigación" in text or "Saturn" in text or "Licencia" in text:
         text = f"{text} | {datetime.datetime.now().strftime('%Y-%m-%d')}"
 
     p_ref.figtext(
-        WATERMARK_POSITION_X,
-        WATERMARK_POSITION_Y,
+        pos_x,
+        pos_y,
         text,
         horizontalalignment='right',
-        fontsize=WATERMARK_FONT_SIZE,
-        color=WATERMARK_COLOR,
-        alpha=WATERMARK_ALPHA
+        fontsize=font_size,
+        color=color,
+        alpha=alpha
     )
 
 def plot_loss_curve(loss_history, output_dir="data/output/plots/"):

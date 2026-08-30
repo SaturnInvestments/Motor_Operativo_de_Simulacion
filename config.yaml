@@ -1,0 +1,46 @@
+# ==============================================================================
+# Motor Operativo de Simulación Financiera - Configuración Operativa (YAML)
+# ==============================================================================
+# Este archivo contiene todos los valores y parámetros por defecto del sistema.
+# Puedes modificar cualquiera de estos parámetros aquí, o sobreescribirlos 
+# directamente desde la línea de comandos (CLI).
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Ingesta y Preparación de Datos (scripts/0_prepare_data.py)
+# ------------------------------------------------------------------------------
+data:
+  input_file: "data/input/tmec_historico.csv"
+  processed_dir: "data/input"
+
+# ------------------------------------------------------------------------------
+# 2. Calibración y Entrenamiento del Modelo (scripts/1_train_model.py)
+# ------------------------------------------------------------------------------
+training:
+  epochs: 1000                    # Número de iteraciones de optimización
+  interval: 200                   # Frecuencia de reporte en consola (épocas)
+  learning_rate: 0.005            # Tasa de aprendizaje del optimizador Adam / GD
+  model_name: "motor_tmec_v1"     # Nombre del artefacto de salida (.saturn)
+  plot_dir: "data/output/plots"   # Directorio para curvas de convergencia
+
+# ------------------------------------------------------------------------------
+# 3. Simulación de Estrés y Monte Carlo (scripts/2_run_simulation.py)
+# ------------------------------------------------------------------------------
+simulation:
+  scenarios: 5000                 # Número de realidades macroeconómicas paralelas
+  horizon_days: 30                # Días hábiles prospectivos a proyectar
+  stochastic_noise: 0.15          # Magnitud del ruido gaussiano estocástico
+  
+  # Variables de Mercado (What-If):
+  # Si 'spot' es null, se tomará automáticamente el último valor histórico
+  spot: null                      
+  
+  # Intervalos de Estrés de Variables Macroeconómicas [min, max]
+  # Si son null, el modelo utiliza la volatilidad histórica normal
+  stress_ranges:
+    banxico: [10.0, 11.5]         # Rango estresado para Tasa Banxico (%)
+    fed: [5.0, 5.5]               # Rango estresado para Tasa Reserva Federal (%)
+    vix: [15.0, 35.0]             # Rango estresado para Índice de Volatilidad VIX
+  
+  # Salidas y Reportes
+  output_dir: "data/output/simulations"

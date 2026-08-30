@@ -5,9 +5,13 @@ Simulación de Riesgo Cambiario T-MEC (USD/MXN).
 
 (c) SaturnInvestments.com.mx
 """
+import os
+import sys
 import numpy as np
 
-# Importaciones del framework propio (asumiendo la estructura de directorios creada)
+# Asegurar importación del paquete saturn
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from saturn.core.model import SaturnModel
 from saturn.core.layers import Dense
 from saturn.core.activations import Tanh, ReLU

@@ -20,19 +20,39 @@ from saturn.core.layers import Dense
 from saturn.core.activations import Tanh, ReLU
 from saturn.security.io import load_saturn_model
 from saturn.utils.data_parser import load_financial_csv
-from saturn.config import COMPANY_NAME, HIDE_BRANDING
+from saturn.config import COMPANY_NAME, HIDE_BRANDING, load_yaml_config
 from saturn.utils.visuals import apply_watermark
 
 def main():
+    # 1. Cargar configuración desde config.yaml si existe
+    yaml_cfg = load_yaml_config()
+    sim_cfg = yaml_cfg.get("simulation", {})
+    data_cfg = yaml_cfg.get("data", {})
+    stress_ranges = sim_cfg.get("stress_ranges", {})
+
+    cfg_input_file = data_cfg.get("input_file", os.path.join("data", "input", "tmec_historico.csv"))
+    cfg_scenarios = sim_cfg.get("scenarios", 5000)
+    cfg_horizon = sim_cfg.get("horizon_days", 30)
+    cfg_noise = sim_cfg.get("stochastic_noise", 0.15)
+    cfg_spot = sim_cfg.get("spot", None)
+    
+    banxico_default = stress_ranges.get("banxico", [None, None])
+    fed_default = stress_ranges.get("fed", [None, None])
+    vix_default = stress_ranges.get("vix", [None, None])
+
     parser = argparse.ArgumentParser(description="Motor Operativo de Simulación - Stress Testing")
-    parser.add_argument("--spot", type=float, help="Precio spot inicial del USD/MXN. Defecto: Último valor histórico.")
+    parser.add_argument("--spot", type=float, default=cfg_spot, help=f"Precio spot inicial del USD/MXN. Defecto: {cfg_spot or 'Último histórico'}")
+    parser.add_argument("--scenarios", type=int, default=cfg_scenarios, help=f"Número de trayectorias Monte Carlo. Defecto: {cfg_scenarios}")
+    parser.add_argument("--days", type=int, default=cfg_horizon, help=f"Horizonte prospectivo en días hábiles. Defecto: {cfg_horizon}")
+    parser.add_argument("--input-file", type=str, default=cfg_input_file, help=f"Ruta al archivo CSV de entrada. Defecto: {cfg_input_file}")
+    
     # Rangos para Análisis Combinatorio (Grid Search)
-    parser.add_argument("--banxico_min", type=float, help="Límite inferior para la tasa de Banxico (%)")
-    parser.add_argument("--banxico_max", type=float, help="Límite superior para la tasa de Banxico (%)")
-    parser.add_argument("--fed_min", type=float, help="Límite inferior para la tasa de la Reserva Federal (%)")
-    parser.add_argument("--fed_max", type=float, help="Límite superior para la tasa de la Reserva Federal (%)")
-    parser.add_argument("--vix_min", type=float, help="Límite inferior para el Índice VIX de Volatilidad")
-    parser.add_argument("--vix_max", type=float, help="Límite superior para el Índice VIX de Volatilidad")
+    parser.add_argument("--banxico_min", type=float, default=banxico_default[0], help=f"Límite inferior Banxico (%). Defecto: {banxico_default[0]}")
+    parser.add_argument("--banxico_max", type=float, default=banxico_default[1], help=f"Límite superior Banxico (%). Defecto: {banxico_default[1]}")
+    parser.add_argument("--fed_min", type=float, default=fed_default[0], help=f"Límite inferior Fed (%). Defecto: {fed_default[0]}")
+    parser.add_argument("--fed_max", type=float, default=fed_default[1], help=f"Límite superior Fed (%). Defecto: {fed_default[1]}")
+    parser.add_argument("--vix_min", type=float, default=vix_default[0], help=f"Límite inferior VIX. Defecto: {vix_default[0]}")
+    parser.add_argument("--vix_max", type=float, default=vix_default[1], help=f"Límite superior VIX. Defecto: {vix_default[1]}")
     
     args = parser.parse_args()
 
@@ -51,7 +71,9 @@ def main():
     print(f"    [OK] Datos históricos procesados. Estandarización de {x_train_raw.shape[1]} variables lista.")
 
     # 2. CARGAR EL MODELO YA ENTRENADO (.saturn)
-    print("[2/6] Cargando Red Neuronal (motor_tmec_v1.saturn)")
+    model_name = "motor_tmec_v1.saturn"
+    model_path = os.path.join("data", "output", "models", model_name)
+    print(f"[2/6] Cargando Red Neuronal ({model_name})")
     
     oraculo = SaturnModel()
     oraculo.add(Dense(7, 16))
@@ -60,14 +82,13 @@ def main():
     oraculo.add(ReLU())
     oraculo.add(Dense(8, 1))
 
-    model_path = os.path.join("data", "output", "models", "motor_tmec_v1.saturn")
     oraculo = load_saturn_model(model_path, oraculo)
     print("    [OK] Arquitectura Feed-Forward (Perceptrón Multicapa) y pesos sinápticos ensamblados.")
 
     # 3. GENERADOR SINTÉTICO: MONTE CARLO MULTI-PASO (Random Walk)
     print("[3/6] Configurando Hiperparámetros de Análisis Combinatorio (Grid Search)")
-    num_escenarios = 5000
-    horizonte_dias = 30
+    num_escenarios = args.scenarios
+    horizonte_dias = args.days
     
     escenario_base = x_train_raw[-1, :, 0]
     desviacion_historica = x_std[:, 0]
@@ -105,7 +126,7 @@ def main():
     for t in range(horizonte_dias):
         # Ruido gaussiano basado en volatilidad histórica
         ruido = np.random.normal(loc=0.0, scale=1.0, size=(num_escenarios, 7))
-        estado_actual = estado_actual + (ruido * desviacion_historica * 0.15) 
+        estado_actual = estado_actual + (ruido * desviacion_historica * cfg_noise) 
         
         # Estandarización y Forward Pass
         estado_actual_z = (estado_actual - x_mean[:, 0]) / (x_std[:, 0] + 1e-8)
@@ -159,8 +180,9 @@ def main():
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.legend(loc='upper left')
     
-    # Aplicar marca de agua centralizada
-    apply_watermark()
+    # Aplicar marca de agua proveniente del binario .saturn
+    model_meta = getattr(oraculo, 'metadata', None)
+    apply_watermark(metadata=model_meta)
 
     plt.tight_layout()
     plt.savefig(plot_out, dpi=300)
@@ -180,8 +202,8 @@ def main():
     plt.axvline(p5[-1], color='green', linestyle='dotted', linewidth=2, label=f'Piso P5: {p5[-1]:.4f}')
     
     plt.legend()
-    # Aplicar marca de agua centralizada
-    apply_watermark()
+    # Aplicar marca de agua proveniente del binario .saturn
+    apply_watermark(metadata=model_meta)
     
     plt.tight_layout()
     plt.savefig(plot_hist_out, dpi=300)

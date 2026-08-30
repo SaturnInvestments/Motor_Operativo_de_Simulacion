@@ -15,9 +15,19 @@ try:
 except FileNotFoundError:
     long_desc = "Motor Operativo de Simulación Financiera no lineal basado en tensores y modelos de agregación de riesgo cambiario."
 
+# Obtener la versión de forma segura
+version = "1.0.0"
+init_path = os.path.join(here, 'saturn', '__init__.py')
+if os.path.exists(init_path):
+    with open(init_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                version = line.split('=')[1].strip().strip('"').strip("'")
+                break
+
 setup(
     name="saturn-network",
-    version="1.0.0",
+    version=version,
     author="Nicolás Daniel Gaucín Neria - Saturn Investments",
     author_email="contacto@saturninvestments.com.mx",
     description="Framework neuronal de análisis combinatorio y simulación de estrés cambiario.",

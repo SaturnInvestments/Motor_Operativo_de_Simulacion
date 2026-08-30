@@ -19,29 +19,46 @@ if key and os.path.exists(encrypted_path):
 else:
     load_dotenv()
 
+# ==========================================
+# 2. Configuración Corporativa y Entorno
+# ==========================================
 COMPANY_NAME = os.getenv("COMPANY_NAME", "SaturnInvestments.com.mx")
 COMPANY_WEBSITE = os.getenv("COMPANY_WEBSITE", "https://SaturnInvestments.com.mx")
 COMPANY_EMAIL = os.getenv("COMPANY_EMAIL", "contacto@saturninvestments.com.mx")
+PROJECT_TITLE = os.getenv("PROJECT_TITLE", "CALIBRACIÓN MOTOR DE SIMULACIÓN")
 
-PROJECT_TITLE = os.getenv("PROJECT_TITLE", "CALIBRACIÓN SATURN NETWORK")
-DEFAULT_CLIENT = os.getenv("DEFAULT_CLIENT", "Cliente Genérico")
-MODEL_EXPORT_NAME = os.getenv("MODEL_EXPORT_NAME", "motor_v1")
-TRAIN_EPOCHS = int(os.getenv("TRAIN_EPOCHS", 150))
-TRAIN_EPOCHS_INTERVAL_PRINT = int(os.getenv("TRAIN_EPOCHS_INTERVAL_PRINT", 10))
-
-# MODO TESIS: Si es "True", las marcas de agua y mensajes de branding genéricos se ocultan
+# Modo Tesis: Si es True, las marcas de agua corporativas se silencian para propósitos académicos
 HIDE_BRANDING = os.getenv("HIDE_BRANDING", "False").lower() in ("true", "1", "yes")
 
 # ==========================================
-# Control de Licenciamiento y Seguridad
+# 3. Control de Licenciamiento y Validación Criptográfica
+# (Obligatorio en producción; sin fallbacks permisivos)
 # ==========================================
-LICENSE_TYPE = os.getenv("LICENSE_TYPE", "AGPLv3 (Académica)")
-LICENSE_KEY = os.getenv("LICENSE_KEY", "")
+LICENSE_KEY = os.getenv("LICENSE_KEY", None)
 
 # ==========================================
-# Configuración de Marca de Agua en Gráficos
+# 4. Cabeceras y Metadatos Inmutables del Binario (.saturn)
+# (Leídos estrictamente desde el entorno cifrado)
 # ==========================================
-WATERMARK_TEXT = os.getenv("WATERMARK_TEXT", "Proyecto de Investigación Académica" if HIDE_BRANDING else COMPANY_NAME)
+import saturn
+SATURN_MODEL_BRAND = os.getenv("SATURN_MODEL_BRAND", None)
+SATURN_MODEL_CLIENT = os.getenv("SATURN_MODEL_CLIENT", None)
+SATURN_MODEL_LICENSE = os.getenv("SATURN_MODEL_LICENSE", None)
+SATURN_MODEL_VERSION = os.getenv("SATURN_MODEL_VERSION", getattr(saturn, "__version__", "1.0.0"))
+SATURN_ALGORITHM_VERSION = os.getenv("SATURN_ALGORITHM_VERSION", getattr(saturn, "__version__", "1.0.0"))
+SATURN_MODEL_ARCHITECTURE = os.getenv("SATURN_MODEL_ARCHITECTURE", None)
+SATURN_MODEL_WARNING = os.getenv(
+    "SATURN_MODEL_WARNING",
+    "Modelo para fines de investigación y evaluación financiera. Prohibida su distribución o copia no autorizada."
+)
+
+# ==========================================
+# 5. Configuración de Marca de Agua grabada en .saturn
+# ==========================================
+WATERMARK_TEXT = os.getenv(
+    "WATERMARK_TEXT",
+    f"Licencia {SATURN_MODEL_LICENSE}: {SATURN_MODEL_CLIENT}" if SATURN_MODEL_CLIENT else "Saturn Investments"
+)
 WATERMARK_FONT_SIZE = int(os.getenv("WATERMARK_FONT_SIZE", 8))
 WATERMARK_COLOR = os.getenv("WATERMARK_COLOR", "gray")
 WATERMARK_ALPHA = float(os.getenv("WATERMARK_ALPHA", 0.5))
@@ -49,8 +66,29 @@ WATERMARK_POSITION_X = float(os.getenv("WATERMARK_POSITION_X", 0.99))
 WATERMARK_POSITION_Y = float(os.getenv("WATERMARK_POSITION_Y", 0.01))
 
 # ==========================================
-# Cabeceras y Metadatos del archivo .saturn
+# 8. Cargador de Configuración Operativa (config.yaml)
 # ==========================================
-SATURN_MODEL_BRAND = os.getenv("SATURN_MODEL_BRAND", "Proyecto de Investigación Académica" if HIDE_BRANDING else COMPANY_NAME)
-SATURN_MODEL_WARNING = os.getenv("SATURN_MODEL_WARNING", "Modelo para fines académicos y de investigación." if HIDE_BRANDING else f"El uso corporativo requiere licencia comercial. Contacte a {COMPANY_NAME}.")
+def load_yaml_config(yaml_path=None):
+    """
+    Carga de forma segura el archivo config.yaml de la raíz del proyecto.
+    Si PyYAML no está instalado o el archivo no existe, devuelve un diccionario vacío.
+    """
+    if yaml_path is None:
+        yaml_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config.yaml"))
+        
+    if not os.path.exists(yaml_path):
+        return {}
+        
+    try:
+        import yaml
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        # Si PyYAML no está instalado, parseo simple nativo
+        return {}
+    except Exception as e:
+        print(f"[!] Advertencia al leer config.yaml: {e}")
+        return {}
+
+
 

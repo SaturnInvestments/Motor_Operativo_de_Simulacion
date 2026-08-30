@@ -1,13 +1,9 @@
 # Motor Operativo de Simulación Financiera
 
-<<<<<<< HEAD
-El Motor Operativo de Simulación Financiera es un framework neuronal secuencial de análisis combinatorio y simulación de estrés macroeconómico cambiario (Stress Testing USD/MXN) diseñado para calibración y prospectiva financiera mediante simulaciones de Monte Carlo y Tensor Neuronal.
-=======
 [![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Architecture: Tensor Sequential](https://img.shields.io/badge/Architecture-Tensor%20Sequential%20ML-orange.svg)](#-arquitectura-tecnológica)
 [![Explainable AI](https://img.shields.io/badge/XAI-Shapley%20Values-purple.svg)](#-explicabilidad-directiva-xai)
->>>>>>> 1491fad (docs: actualizar README y gitignore con detalles del paper y uso)
 
 Este **Motor Operativo de Simulación** es un framework basado en inteligencia artificial y redes neuronales secuenciales, diseñado para la gestión de tesorería y evaluación de riesgos financieros. Se enfoca particularmente en la cotización del par peso mexicano frente al dólar estadounidense (**USD/MXN**), modelando la incertidumbre macroeconómica y geopolítica inherente al Tratado entre México, Estados Unidos y Canadá (**T-MEC**).
 
@@ -65,13 +61,8 @@ Mediante filtros de regímenes de mercado (funciones de activación hiperbólica
 
 1. **Clonar el repositorio**:
 ```bash
-<<<<<<< HEAD
-git clone [<url-del-repositorio>](https://github.com/SaturnInvestments/Motor_Operativo_de_Simulacion)
-cd motor_operativo_de_simulacion
-=======
 git clone https://github.com/SaturnInvestments/Motor_Operativo_de_Simulacion.git
 cd Motor_Operativo_de_Simulacion
->>>>>>> 1491fad (docs: actualizar README y gitignore con detalles del paper y uso)
 ```
 
 2. **Crear y activar un entorno virtual**:
@@ -95,6 +86,33 @@ pip install -r requirements.txt
 
 ---
 
+## ⚙️ Configuración Operativa (`config.yaml`)
+
+El proyecto cuenta con un archivo centralizado **[`config.yaml`](file:///c:/projects/software/saturn_github/motor_operativo_de_simulacion/config.yaml)** en la raíz. Si ejecutas los scripts sin parámetros por consola, el motor tomará automáticamente los valores definidos en este archivo:
+
+```yaml
+data:
+  input_file: "data/input/tmec_historico.csv"
+
+training:
+  epochs: 1000
+  interval: 200
+  learning_rate: 0.005
+  model_name: "motor_tmec_v1"
+
+simulation:
+  scenarios: 5000
+  horizon_days: 30
+  stochastic_noise: 0.15
+  spot: null               # Si es null, toma el último valor histórico
+  stress_ranges:
+    banxico: [10.0, 11.5]
+    fed: [5.0, 5.5]
+    vix: [15.0, 35.0]
+```
+
+---
+
 ## 🚀 Flujo Operativo (Scripts)
 
 El ecosistema transforma el caos macroeconómico en inteligencia accionable a través de tres fases estrictas:
@@ -111,9 +129,22 @@ Sincroniza y estructura la inteligencia de mercado. **Los datos base deben depos
 ### Módulo 1: Calibración de Red Neuronal y Encapsulamiento
 **Ejecución:** `python scripts/1_train_model.py`
 
-Realiza una auditoría histórica automatizada donde el algoritmo revisa miles de iteraciones pasadas:
+Realiza una auditoría histórica automatizada donde el algoritmo revisa iteraciones pasadas de datos macroeconómicos:
 - **Calibración por costo financiero**: Ajusta las sensibilidades internas mediante la minimización del Error Cuadrático Medio, penalizando exponencialmente desviaciones graves (simulando los quiebres de caja).
-- **Encapsulamiento Cuantitativo**: Detiene el aprendizaje deliberadamente al alcanzar madurez algorítmica y serializa las matrices resultantes en un archivo `motor_tmec_v1.saturn` (Motor Operativo de Simulación).
+- **Encapsulamiento Cuantitativo e Inmutabilidad**: Detiene el aprendizaje deliberadamente al alcanzar madurez algorítmica y serializa la topología, pesos y metadatos de versión en un archivo `motor_tmec_v1.saturn`.
+
+**Parámetros configurables en CLI:**
+| Parámetro | Tipo | Descripción | Defecto |
+| :--- | :--- | :--- | :--- |
+| `--epochs` | Int | Número de épocas / iteraciones de optimización | `1000` |
+| `--interval` | Int | Frecuencia de impresión en consola | `200` |
+| `--model-name` | String | Nombre del archivo binario serializado resultante | `motor_tmec_v1` |
+| `--client` | String | Nombre de la entidad o cliente corporativo | `Cliente Genérico` |
+
+*Ejemplo de ejecución personalizada:*
+```bash
+python scripts/1_train_model.py --epochs 1500 --interval 100 --model-name motor_tmec_v2
+```
 
 ### Módulo 2: Simulación de Estrés Geopolítico y Cobertura
 **Ejecución:** `python scripts/2_run_simulation.py`
@@ -175,7 +206,7 @@ Este proyecto se distribuye bajo un modelo de **Licenciamiento Dual**:
 ## 📚 Referencias Destacadas
 
 *Basado en el marco teórico y bibliográfico del proyecto de investigación subyacente:*
-- **Aguayo, C., Gaucín Neria, N. D., Morales Catro, A.**. *"Inteligencia_Artificial_Explicable_para_la_Optimizacion_de_la_Gestion_de_Tesoreria_y_Riesgos_Financieros.pdf"* (Documento de Investigación; *Publicación Pendiente*).
+- **Aguayo, C., Gaucín Neria, N. D., & Morales Castro, A.** (2026). *"Inteligencia artificial explicable para la optimización de la gestión de tesorería y riesgos financieros"* (documento de investigación; *publicación pendiente*).
 - Baker, S. R., Bloom, N., & Davis, S. J. (2016). *Measuring economic policy uncertainty*.
 - Lundberg, S. M., & Lee, S.-I. (2017). *A unified approach to interpreting model predictions* (SHAP).
 - Shapley, L. S. (1953). *A value for n-person games*.
