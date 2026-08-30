@@ -1,0 +1,27 @@
+saturn-network/
+│
+├── saturn/                   # Directorio principal del paquete Python
+│   ├── __init__.py           # Expone la API pública (ej. from saturn import Model, Layer)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── model.py          # Clase principal SaturnModel (gestiona forward/backward pass)
+│   │   ├── layers.py         # Definición de capas (Unidades de Agregación en NumPy)
+│   │   └── activations.py    # Funciones de activación (Regímenes de mercado)
+│   │
+│   ├── optimizers/
+│   │   ├── __init__.py
+│   │   └── adam.py           # Optimizadores matemáticos (Calibración continua)
+│   │
+│   ├── security/             # ¡Módulo crítico para la monetización!
+│   │   ├── __init__.py
+│   │   ├── license_check.py  # Lógica de validación que compilaremos a C (.so/.pyd)
+│   │   └── io.py             # Gestor de HDF5 encapsulado para generar archivos .saturn
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       └── printout.py       # Banner de arranque, branding de Saturn Investments y disclaimers
+│
+├── tests/                    # Pruebas unitarias para validar las matemáticas
+├── setup.py                  # Script de instalación del paquete
+├── LICENSE_AGPLv3            # Archivo de licencia académica/open-source
+└── README.md                 # Documentación del proyecto

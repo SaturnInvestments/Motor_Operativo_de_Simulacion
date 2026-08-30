@@ -1,0 +1,78 @@
+# ==========================================
+# Saturn Network - Filtros de Git (.gitignore)
+# (c) SaturnInvestments.com.mx
+# ==========================================
+
+# 1. Variables de Entorno y Claves Secretas
+# Cuidado: .env.encrypted SÍ debe subirse a Git (contiene las variables cifradas)
+.env
+.env.key
+.env.bak
+.env.local
+.env.*.local
+uso_interno.txt
+
+# 2. Entornos Virtuales y Dependencias
+venv/
+.venv/
+env/
+.env/
+ENV/
+bin/
+lib/
+include/
+pip-selfcheck.json
+
+# 3. Archivos del Sistema y Cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+*.dll
+*.dylib
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# 4. Compilación e Instalación (Cython / C-Extensions / Packaging)
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 5. Entradas y Salidas de Datos (Simulaciones)
+# Mantenemos las entradas históricas básicas si es necesario, pero ignoramos salidas y logs
+data/output/
+data/input/*.xlsx
+data/input/*.tmp
+*.log
+logs/
+
+# 6. Configuraciones de Editores e IDEs
+.vscode/
+.idea/
+.project
+.pydevproject
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+.gemini/
+.agents/

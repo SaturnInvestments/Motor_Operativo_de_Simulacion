@@ -1,0 +1,22 @@
+# ==========================================
+# Saturn Network - Entorno de Dependencias
+# (c) SaturnInvestments.com.mx
+# ==========================================
+
+# Núcleo matemático y álgebra lineal vectorial
+numpy>=1.26.4
+
+# Motor de serialización y lectura de metadatos (HDF5)
+h5py>=3.12.0
+
+# Compilador para ofuscación y seguridad del código corporativo (C-Extensions)
+Cython>=3.0.10
+
+matplotlib==3.9.0
+python-dotenv
+pandas>=2.2.2
+cryptography>=42.0.0
+
+# python -m venv venv
+# pip install -r requirements.txt
+# pip install -e .
