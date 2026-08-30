@@ -1,6 +1,6 @@
 # Motor Operativo de Simulación Financiera
 
-Saturn Network es un framework neuronal secuencial de análisis combinatorio y simulación de estrés macroeconómico cambiario (Stress Testing USD/MXN) diseñado para calibración y prospectiva financiera mediante simulaciones de Monte Carlo y Tensor Neuronal.
+El Motor Operativo de Simulación Financiera es un framework neuronal secuencial de análisis combinatorio y simulación de estrés macroeconómico cambiario (Stress Testing USD/MXN) diseñado para calibración y prospectiva financiera mediante simulaciones de Monte Carlo y Tensor Neuronal.
 
 El proyecto cuenta con un esquema de licenciamiento dual (Académico AGPLv3 / Comercial Enterprise) y soporte para variables de entorno cifradas estilo Laravel.
 
