@@ -1,4 +1,4 @@
-# Saturn Network - Motor Operativo de Simulación Financiera
+# Motor Operativo de Simulación Financiera
 
 Saturn Network es un framework neuronal secuencial de análisis combinatorio y simulación de estrés macroeconómico cambiario (Stress Testing USD/MXN) diseñado para calibración y prospectiva financiera mediante simulaciones de Monte Carlo y Tensor Neuronal.
 
