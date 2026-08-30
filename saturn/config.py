@@ -4,13 +4,15 @@ from saturn.security.env_crypt import get_key, decrypt_env_to_memory
 
 # 1. Intentar descifrar el archivo .env.encrypted si existe la clave
 key = get_key()
-encrypted_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env.encrypted"))
+cwd_encrypted = os.path.abspath(os.path.join(os.getcwd(), ".env.encrypted"))
+pkg_encrypted = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env.encrypted"))
+encrypted_path = cwd_encrypted if os.path.exists(cwd_encrypted) else pkg_encrypted
 
 if key and os.path.exists(encrypted_path):
     try:
         decrypted_env = decrypt_env_to_memory(encrypted_path, key)
         for k, v in decrypted_env.items():
-            os.environ.setdefault(k, v)
+            os.environ[k] = v  # Actualizar variables de entorno para el proceso actual
         # Cargar variables locales sobre las descifradas (si existen)
         load_dotenv()
     except Exception as e:
@@ -44,8 +46,8 @@ import saturn
 SATURN_MODEL_BRAND = os.getenv("SATURN_MODEL_BRAND", None)
 SATURN_MODEL_CLIENT = os.getenv("SATURN_MODEL_CLIENT", None)
 SATURN_MODEL_LICENSE = os.getenv("SATURN_MODEL_LICENSE", None)
-SATURN_MODEL_VERSION = os.getenv("SATURN_MODEL_VERSION", getattr(saturn, "__version__", "1.0.0"))
-SATURN_ALGORITHM_VERSION = os.getenv("SATURN_ALGORITHM_VERSION", getattr(saturn, "__version__", "1.0.0"))
+SATURN_MODEL_VERSION = os.getenv("SATURN_MODEL_VERSION", None)
+SATURN_ALGORITHM_VERSION = os.getenv("SATURN_ALGORITHM_VERSION", None)
 SATURN_MODEL_ARCHITECTURE = os.getenv("SATURN_MODEL_ARCHITECTURE", None)
 SATURN_MODEL_WARNING = os.getenv(
     "SATURN_MODEL_WARNING",

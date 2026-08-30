@@ -10,7 +10,7 @@ import sys
 import argparse
 from cryptography.fernet import Fernet
 
-def get_key():
+def get_key(base_path=None):
     """
     Obtiene la clave de cifrado desde la variable de entorno o desde el archivo local .env.key.
     """
@@ -19,10 +19,22 @@ def get_key():
     if key:
         return key.strip().encode()
 
-    # 2. Intentar desde archivo .env.key
-    key_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env.key"))
-    if os.path.exists(key_file):
-        with open(key_file, "rb") as f:
+    # 2. Intentar desde archivo .env.key en el directorio de trabajo actual (CWD)
+    cwd_key_file = os.path.abspath(os.path.join(os.getcwd(), ".env.key"))
+    if os.path.exists(cwd_key_file):
+        with open(cwd_key_file, "rb") as f:
+            return f.read().strip()
+
+    # 3. Intentar desde archivo .env.key en la raíz relativa al paquete
+    if base_path:
+        custom_key_file = os.path.abspath(os.path.join(base_path, ".env.key"))
+        if os.path.exists(custom_key_file):
+            with open(custom_key_file, "rb") as f:
+                return f.read().strip()
+
+    pkg_key_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env.key"))
+    if os.path.exists(pkg_key_file):
+        with open(pkg_key_file, "rb") as f:
             return f.read().strip()
     
     return None
