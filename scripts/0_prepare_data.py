@@ -1,24 +1,46 @@
 import pandas as pd
 import os
+import sys
+import argparse
 
 def main():
-    # Rutas a los archivos
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-    daily_file = os.path.join(base_dir, 'input', 'base_diario.csv')
-    monthly_file = os.path.join(base_dir, 'input', 'base_mensual.csv')
-    output_file = os.path.join(base_dir, 'input', 'tmec_historico.csv')
+    parser = argparse.ArgumentParser(description="Ingesta y Preprocesamiento de Series Macroeconómicas T-MEC")
+    parser.add_argument("--daily", type=str, default=os.path.join("data", "input", "base_diario.csv"), help="Ruta al CSV con series diarias")
+    parser.add_argument("--monthly", type=str, default=os.path.join("data", "input", "base_mensual.csv"), help="Ruta al CSV con series mensuales")
+    parser.add_argument("--output", type=str, default=os.path.join("data", "input", "tmec_historico.csv"), help="Ruta de salida del dataset preparado")
+    args = parser.parse_args()
 
-    print("Cargando datos...")
+    daily_file = args.daily
+    monthly_file = args.monthly
+    output_file = args.output
+
+    if not os.path.exists(daily_file):
+        print(f"❌ ERROR: No se encontró el archivo de series diarias: {daily_file}")
+        print("   Asegúrese de colocar 'base_diario.csv' en la carpeta data/input/.")
+        return
+
+    if not os.path.exists(monthly_file):
+        print(f"❌ ERROR: No se encontró el archivo de series mensuales: {monthly_file}")
+        print("   Asegúrese de colocar 'base_mensual.csv' en la carpeta data/input/.")
+        return
+
+    print("==================================================")
+    print(" INGESTADOR DE DATOS MACROECONÓMICOS (T-MEC)")
+    print("==================================================\n")
+    print(f"[*] Cargando series diarias desde:  {daily_file}")
+    print(f"[*] Cargando series mensuales desde: {monthly_file}")
+
     df_daily = pd.read_csv(daily_file)
     df_monthly = pd.read_csv(monthly_file)
 
     # 1. Estandarización de Fechas
-    df_daily['date'] = pd.to_datetime(df_daily['date'], format='%d/%m/%Y')
-    df_monthly['date'] = pd.to_datetime(df_monthly['date'], format='%Y-%m-%d')
+    df_daily['date'] = pd.to_datetime(df_daily['date'], format='%d/%m/%Y', errors='coerce')
+    df_monthly['date'] = pd.to_datetime(df_monthly['date'], format='%Y-%m-%d', errors='coerce')
 
     # Seleccionar las columnas de interés de la base mensual
     cols_to_keep = ['date', 'remesas_mdd', 'diferencial_tasas', 'remesas_z', 'remesas_var_anual_pct']
-    df_monthly_filtered = df_monthly[cols_to_keep]
+    existing_cols = [c for c in cols_to_keep if c in df_monthly.columns]
+    df_monthly_filtered = df_monthly[existing_cols]
 
     # 2. Fusión de los Datos (Merge)
     # Left join usando la fecha
@@ -26,11 +48,10 @@ def main():
     df_merged = df_merged.sort_values('date')
 
     # 3. Aplicación de Forward Fill (ffill)
-    cols_to_ffill = ['remesas_mdd', 'diferencial_tasas', 'remesas_z', 'remesas_var_anual_pct']
+    cols_to_ffill = [c for c in existing_cols if c != 'date']
     df_merged[cols_to_ffill] = df_merged[cols_to_ffill].ffill()
 
     # 4. Limpieza Final y Eliminación de Fechas
-    # Eliminar filas (días iniciales) que quedaron con NaN antes del primer dato mensual
     df_merged = df_merged.dropna()
 
     # Eliminar la columna 'date' para evitar ruido en la red neuronal
@@ -44,12 +65,13 @@ def main():
         df_final = df_final[cols]
 
     # Guardar el resultado final
+    os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
     df_final.to_csv(output_file, index=False)
     
-    print(f"\nProceso completado.")
-    print(f"Archivo guardado en: {output_file}")
-    print(f"Forma final del dataset: {df_final.shape}")
-    print(f"Columnas incluidas: {df_final.columns.tolist()}")
+    print(f"\n[OK] Preprocesamiento y fusión de frecuencias concluido exitosamente.")
+    print(f"     Archivo generado en: {output_file}")
+    print(f"     Dimensiones del dataset: {df_final.shape[0]} muestras x {df_final.shape[1]} variables")
+    print(f"     Columnas estructuradas: {', '.join(df_final.columns)}")
 
 if __name__ == '__main__':
     main()

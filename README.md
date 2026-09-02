@@ -50,22 +50,28 @@ Mediante filtros de regímenes de mercado (funciones de activación hiperbólica
 
 ---
 
-## 🛠️ Requisitos e Instalación
+## 🚀 Inicio Rápido (Zero-Setup / 1 Clic)
 
-### Prerrequisitos del Sistema
-- **Sistema Operativo**: Windows 10/11, macOS o distribuciones Linux (Ubuntu/Debian).
-- **Python**: Versión 3.8 o superior (se recomiendan versiones de 64-bits para un manejo eficiente de tensores).
-- Memoria RAM mínima recomendada de 8 GB para operaciones de simulación estocástica.
+El proyecto cuenta con un orquestador inteligente que autoconfigura el entorno e inicia un panel de control interactivo:
 
-### Proceso de Instalación
-
-1. **Clonar el repositorio**:
 ```bash
+# 1. Clonar el repositorio
 git clone https://github.com/SaturnInvestments/Motor_Operativo_de_Simulacion.git
 cd Motor_Operativo_de_Simulacion
+
+# 2. Ejecutar el Orquestador Unificado (Auto-instala el entorno en su primer uso)
+python main.py
 ```
 
-2. **Crear y activar un entorno virtual**:
+El orquestador detectará automáticamente su sistema operativo (Windows, Linux o macOS), creará el entorno virtual si no existe, instalará las dependencias y le presentará un menú interactivo con valores óptimos por defecto para ejecutar simulaciones, entrenamientos y análisis de estrés.
+
+---
+
+## 🛠️ Instalación y Configuración Manual
+
+Si prefiere configurar el entorno de forma manual paso a paso:
+
+1. **Crear y activar un entorno virtual**:
 
 *En Windows (PowerShell):*
 ```powershell
@@ -79,7 +85,7 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. **Instalar las dependencias matemáticas y operativas**:
+2. **Instalar dependencias**:
 ```bash
 pip install -r requirements.txt
 ```

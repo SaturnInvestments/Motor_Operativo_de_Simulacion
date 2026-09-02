@@ -26,12 +26,14 @@ def main():
 
     cfg_epochs = train_cfg.get("epochs", 1000)
     cfg_interval = train_cfg.get("interval", 200)
+    cfg_learning_rate = train_cfg.get("learning_rate", 0.005)
     cfg_model_name = train_cfg.get("model_name", "motor_tmec_v1")
-    cfg_input_file = data_cfg.get("input_file", "data/input/tmec_historico.csv")
+    cfg_input_file = data_cfg.get("input_file", os.path.join("data", "input", "tmec_historico.csv"))
 
     parser = argparse.ArgumentParser(description="Calibración y Entrenamiento del Motor Neuronal")
     parser.add_argument("--epochs", type=int, default=cfg_epochs, help=f"Número de iteraciones de entrenamiento. Defecto: {cfg_epochs}")
     parser.add_argument("--interval", type=int, default=cfg_interval, help=f"Intervalo de impresión de pérdida en consola. Defecto: {cfg_interval}")
+    parser.add_argument("--lr", type=float, default=cfg_learning_rate, help=f"Tasa de aprendizaje (learning rate). Defecto: {cfg_learning_rate}")
     parser.add_argument("--model-name", type=str, default=cfg_model_name, help=f"Nombre del archivo compilado de salida. Defecto: {cfg_model_name}")
     parser.add_argument("--input-file", type=str, default=cfg_input_file, help=f"Ruta al dataset histórico CSV. Defecto: {cfg_input_file}")
     parser.add_argument("--client", type=str, default=SATURN_MODEL_CLIENT, help=f"Entidad o cliente asignado al artefacto. Defecto: '{SATURN_MODEL_CLIENT}'")
@@ -51,9 +53,10 @@ def main():
         return
     
     x_train_raw, y_train = load_financial_csv(csv_path, target_col_index=-1)
+    num_features = x_train_raw.shape[1]
 
     # 2. Estandarización Z-Score
-    print("[*] Estandarizando variables independientes (Z-score)")
+    print(f"[*] Estandarizando {num_features} variables independientes (Z-score)")
     x_mean = np.mean(x_train_raw, axis=0)
     x_std = np.std(x_train_raw, axis=0)
     
@@ -62,8 +65,8 @@ def main():
     # 3. ARQUITECTURA DEL MOTOR OPERATIVO
     modelo = SaturnModel()
     
-    # Capa de entrada (7 variables macroeconómicas) y primera capa oculta (16 neuronas)
-    modelo.add(Dense(7, 16)) 
+    # Capa de entrada (dinámica según num_features) y primera capa oculta (16 neuronas)
+    modelo.add(Dense(num_features, 16)) 
     modelo.add(Tanh())       
     
     # Capa oculta de abstracción de riesgo
@@ -76,8 +79,8 @@ def main():
     modelo.compile(mse, mse_prime)
 
     # 4. ENTRENAMIENTO
-    print(f"[*] Iniciando entrenamiento de red neuronal con datos históricos ({args.epochs} épocas)")
-    historial_error = modelo.fit(x_train, y_train, epochs=args.epochs, learning_rate=0.005, print_interval=args.interval)
+    print(f"[*] Iniciando entrenamiento de red neuronal con datos históricos ({args.epochs} épocas, lr={args.lr})")
+    historial_error = modelo.fit(x_train, y_train, epochs=args.epochs, learning_rate=args.lr, print_interval=args.interval)
 
     # 5. GENERACIÓN DEL ECOSISTEMA VISUAL
     print("[*] Generando panel de control gráfico:")
@@ -88,7 +91,7 @@ def main():
 
     # 6. EXPORTACIÓN DEL MODELO SERIALIZADO
     print("[*] Exportando red neuronal (.saturn)")
-    model_path = f"data/output/models/{args.model_name}"
+    model_path = os.path.join("data", "output", "models", args.model_name)
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     
     save_saturn_model(

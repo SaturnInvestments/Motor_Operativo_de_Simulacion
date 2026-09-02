@@ -31,6 +31,10 @@ def main():
     stress_ranges = sim_cfg.get("stress_ranges", {})
 
     cfg_input_file = data_cfg.get("input_file", os.path.join("data", "input", "tmec_historico.csv"))
+    cfg_model_name = sim_cfg.get("model_name", yaml_cfg.get("training", {}).get("model_name", "motor_tmec_v1"))
+    if not cfg_model_name.endswith(".saturn"):
+        cfg_model_name = f"{cfg_model_name}.saturn"
+        
     cfg_scenarios = sim_cfg.get("scenarios", 5000)
     cfg_horizon = sim_cfg.get("horizon_days", 30)
     cfg_noise = sim_cfg.get("stochastic_noise", 0.15)
@@ -45,6 +49,7 @@ def main():
     parser.add_argument("--scenarios", type=int, default=cfg_scenarios, help=f"Número de trayectorias Monte Carlo. Defecto: {cfg_scenarios}")
     parser.add_argument("--days", type=int, default=cfg_horizon, help=f"Horizonte prospectivo en días hábiles. Defecto: {cfg_horizon}")
     parser.add_argument("--input-file", type=str, default=cfg_input_file, help=f"Ruta al archivo CSV de entrada. Defecto: {cfg_input_file}")
+    parser.add_argument("--model-name", type=str, default=cfg_model_name, help=f"Nombre del archivo de modelo .saturn. Defecto: {cfg_model_name}")
     
     # Rangos para Análisis Combinatorio (Grid Search)
     parser.add_argument("--banxico_min", type=float, default=banxico_default[0], help=f"Límite inferior Banxico (%). Defecto: {banxico_default[0]}")
@@ -63,20 +68,23 @@ def main():
 
     # 1. OBTENER PARÁMETROS DE ESTANDARIZACIÓN (Z-Score)
     print("[1/6] Analizando contexto macroeconómico base")
-    csv_path = os.path.join("data", "input", "tmec_historico.csv")
+    csv_path = args.input_file
     x_train_raw, y_train = load_financial_csv(csv_path, target_col_index=-1)
+    num_features = x_train_raw.shape[1]
     
     x_mean = np.mean(x_train_raw, axis=0)
     x_std = np.std(x_train_raw, axis=0)
-    print(f"    [OK] Datos históricos procesados. Estandarización de {x_train_raw.shape[1]} variables lista.")
+    print(f"    [OK] Datos históricos procesados. Estandarización de {num_features} variables lista.")
 
     # 2. CARGAR EL MODELO YA ENTRENADO (.saturn)
-    model_name = "motor_tmec_v1.saturn"
+    model_name = args.model_name
+    if not model_name.endswith(".saturn"):
+        model_name = f"{model_name}.saturn"
     model_path = os.path.join("data", "output", "models", model_name)
     print(f"[2/6] Cargando Red Neuronal ({model_name})")
     
     oraculo = SaturnModel()
-    oraculo.add(Dense(7, 16))
+    oraculo.add(Dense(num_features, 16))
     oraculo.add(Tanh())
     oraculo.add(Dense(16, 8))
     oraculo.add(ReLU())
@@ -116,8 +124,9 @@ def main():
         print(f"   [INFO] Muestreo uniforme Índice VIX entre {args.vix_min} y {args.vix_max}")
         estado_actual[:, 2] = np.random.uniform(args.vix_min, args.vix_max, num_escenarios)
         
-    # Autocalcular diferencial de tasas (Columna 4) en base a los escenarios aleatorios inyectados
-    estado_actual[:, 4] = estado_actual[:, 0] - estado_actual[:, 1]
+    # Autocalcular diferencial de tasas si existen al menos 2 columnas
+    if num_features >= 5:
+        estado_actual[:, 4] = estado_actual[:, 0] - estado_actual[:, 1]
     
     print("[4/6] Ejecutando simulación prospectiva de variables")
     print(f"    [INFO] Proyectando {num_escenarios} trayectorias con evolución estocástica a {horizonte_dias} días.")
@@ -125,12 +134,14 @@ def main():
     trayectorias_usd_mxn = np.zeros((num_escenarios, horizonte_dias))
     for t in range(horizonte_dias):
         # Ruido gaussiano basado en volatilidad histórica
-        ruido = np.random.normal(loc=0.0, scale=1.0, size=(num_escenarios, 7))
+        ruido = np.random.normal(loc=0.0, scale=1.0, size=(num_escenarios, num_features))
         estado_actual = estado_actual + (ruido * desviacion_historica * cfg_noise) 
         
         # Estandarización y Forward Pass
         estado_actual_z = (estado_actual - x_mean[:, 0]) / (x_std[:, 0] + 1e-8)
-        x_tensor = estado_actual_z.reshape(num_escenarios, 7, 1)
+        x_tensor = estado_actual_z.reshape(num_escenarios, num_features, 1)
+        proyecciones_tensor = oraculo.predict(x_tensor)
+        trayectorias_usd_mxn[:, t] = np.array([val[0][0] for val in proyecciones_tensor])
         proyecciones_tensor = oraculo.predict(x_tensor)
         trayectorias_usd_mxn[:, t] = np.array([val[0][0] for val in proyecciones_tensor])
 
@@ -180,11 +191,11 @@ def main():
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.legend(loc='upper left')
     
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
     # Aplicar marca de agua proveniente del binario .saturn
     model_meta = getattr(oraculo, 'metadata', None)
     apply_watermark(metadata=model_meta)
 
-    plt.tight_layout()
     plt.savefig(plot_out, dpi=300)
     plt.close()
 
@@ -202,10 +213,9 @@ def main():
     plt.axvline(p5[-1], color='green', linestyle='dotted', linewidth=2, label=f'Piso P5: {p5[-1]:.4f}')
     
     plt.legend()
-    # Aplicar marca de agua proveniente del binario .saturn
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
     apply_watermark(metadata=model_meta)
     
-    plt.tight_layout()
     plt.savefig(plot_hist_out, dpi=300)
     plt.close()
     

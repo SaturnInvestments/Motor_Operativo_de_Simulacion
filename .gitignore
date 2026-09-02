@@ -4,9 +4,8 @@
 # ==========================================
 
 # 1. Variables de Entorno y Claves Secretas
-# Cuidado: .env.encrypted SÍ debe subirse a Git (contiene las variables cifradas)
+# Cuidado: .env.encrypted y .env.key SÍ se incluyen en la versión demo académica
 .env
-.env.key
 .env.bak
 .env.local
 .env.*.local
@@ -29,14 +28,15 @@ pip-selfcheck.json
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyd
-*.so
 *.dll
-*.dylib
-*.pyd
 .pytest_cache/
 .mypy_cache/
 .ipynb_checkpoints/
+
+# Permitir runtime binario de PyArmor Multi-OS
+!pyarmor_runtime_000000/
+!pyarmor_runtime_000000/**
+!pyarmor_runtime_000000/*/**
 
 # 4. Compilación e Instalación (Cython / C-Extensions / Packaging)
 build/
@@ -44,7 +44,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -57,8 +56,11 @@ share/python-wheels/
 MANIFEST
 
 # 5. Entradas y Salidas de Datos (Simulaciones)
-# Mantenemos las entradas históricas básicas si es necesario, pero ignoramos salidas y logs
-data/output/
+# Mantenemos las entradas históricas y modelos sellados, pero ignoramos salidas y logs
+data/output/plots/
+data/output/simulations/
+!data/output/models/
+!data/output/models/*.saturn
 data/input/*.xlsx
 data/input/*.tmp
 *.log
